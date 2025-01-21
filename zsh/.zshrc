@@ -56,12 +56,6 @@ repos=(
     # load plugins
 plugin-load $repos
 
-# ~~~~~~~~~~~~~~~~~~~ Prompt ~~~~~~~~~~~~~~~~~~~~~~~~~
-    # config prompt style
-# PROMPT='%(?.%F{green}.%F{red} ❯%F{green}) ❯%f '
-# PROMPT='%F{cyan}%n%f'$PROMPT
-# RPROMPT='%d'
-
 # ~~~~~~~~~~~~~~~~~~~ Keymaps ~~~~~~~~~~~~~~~~~~~~~~
 bindkey -e
 bindkey '^p' history-search-backward
@@ -80,8 +74,8 @@ alias la='ls -A'
 alias wezterm='nvim ~/.dotfiles/wezterm/.wezterm.lua'
 alias c=clear
 alias t=tmux
-alias v=nvim
 alias vi=nvim
+alias weka='~/packages/app/weka-3-9-6/weka.sh'
 
     # recommened function from yazi
 function y() {
@@ -112,3 +106,4 @@ unsetopt BEEP
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
 zstyle ':completion:*' list-colors '${(s.:.)LS_COLORS}'
 zstyle ':completion:*' menu select
+setopt auto_cd
