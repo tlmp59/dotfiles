@@ -28,6 +28,7 @@
   M.addPkgs = with pkgs; [
     wsl-open
     xclip
+    xdg-utils
   ];
 
   M.openssh = true;

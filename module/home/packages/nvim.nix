@@ -65,6 +65,7 @@ in {
       harper
       pyright
       tinymist
+      markdown-oxide
 
       # -- DAP --
 
