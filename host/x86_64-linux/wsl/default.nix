@@ -24,11 +24,22 @@
     autoPrune.enable = true;
   };
 
+  users.users.tlmp59.extraGroups = [
+    "wheel"
+    "docker"
+  ];
+
+  fonts.packages = with pkgs; [
+    nerd-fonts.jetbrains-mono
+    nerd-fonts.tinos
+  ];
+
   M.defaultPkgs = true;
   M.addPkgs = with pkgs; [
     wsl-open
     xclip
     xdg-utils
+    xxd
   ];
 
   M.openssh = true;

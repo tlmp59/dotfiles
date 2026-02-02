@@ -24,7 +24,7 @@ with lib; {
     users.mutableUsers = false;
     users.users.${vars.username} = {
       isNormalUser = mkForce true;
-      extraGroups = mkDefault ["wheel" "networking"];
+      extraGroups = mkDefault ["wheel" "networking" "docker"];
       initialHashedPassword = "$y$j9T$M6TybczU2EA.4QsbGotzL/$D4CO6z0J.jJsIx84jlHSmQ/FRVxzp9i6.U8T2TlbMV6";
     };
 

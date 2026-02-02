@@ -63,7 +63,7 @@ in {
       vscode-css-languageserver
       nixd
       harper
-      pyright
+      basedpyright
       tinymist
       markdown-oxide
 
@@ -73,9 +73,8 @@ in {
 
       # -- Formatter --
       alejandra
-      black
       dprint
-      isort
+      ruff
       stylua
       typstyle
       shfmt

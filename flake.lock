@@ -583,19 +583,19 @@
         "sops-nix": "sops-nix"
       },
       "locked": {
-        "lastModified": 1759900754,
+        "lastModified": 1762359713,
         "narHash": "sha256-eVRttvettbwIS7vdkSkvoywPymd3TWmrp7SAS+j0SwI=",
-        "ref": "main",
-        "rev": "4b5e32572e54fdbb752ac15043ddf493feb15b10",
+        "ref": "user",
+        "rev": "36518b53f8f63764b34c548b666305ad30cde12e",
         "shallow": true,
         "type": "git",
-        "url": "ssh://git@github.com/d3vnrd/d3vnrd.secrets.git"
+        "url": "ssh://git@github.com/d3vnrd/d3vnrd.vault.git"
       },
       "original": {
-        "ref": "main",
+        "ref": "user",
         "shallow": true,
         "type": "git",
-        "url": "ssh://git@github.com/d3vnrd/d3vnrd.secrets.git"
+        "url": "ssh://git@github.com/d3vnrd/d3vnrd.vault.git"
       }
     },
     "sops-nix": {
@@ -606,11 +606,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1759635238,
-        "narHash": "sha256-UvzKi02LMFP74csFfwLPAZ0mrE7k6EiYaKecplyX9Qk=",
+        "lastModified": 1760998189,
+        "narHash": "sha256-ee2e1/AeGL5X8oy/HXsZQvZnae6XfEVdstGopKucYLY=",
         "owner": "mic92",
         "repo": "sops-nix",
-        "rev": "6e5a38e08a2c31ae687504196a230ae00ea95133",
+        "rev": "5a7d18b5c55642df5c432aadb757140edfeb70b3",
         "type": "github"
       },
       "original": {

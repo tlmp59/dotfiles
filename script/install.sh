@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-set -euo pipefail # e: exit on error; u: exit on missing variables
+set -euo pipefail
+
 source ./lib.sh
 
 check --type cmd nix ssh git
@@ -12,6 +13,7 @@ AUTH_KEY=${AUTH_KEY:-"/run/secrets/keys/default/private"}
 SSH_PORT=${SSH_PORT:-22}
 ROOT=$(git rev-parse --show-toplevel)
 
+# TODO: this will replace the original help command
 help() {
     print -i "Usage: $0 [OPTIONS]"
     echo
