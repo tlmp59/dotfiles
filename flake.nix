@@ -14,23 +14,17 @@
       */
       "x86_64-linux"
     ];
-  in
-    lib.mergeAttrsList [
-      # Per-host outputs: NixOS, home-manager, and nix-darwin configs
-      (import ./host {inherit inputs ulib;})
+  in {
+    # Used by `nix develop .#<name>`
+    devShells = forAllSystems (
+      system: import ./shell.nix pkgs.${system}
+    );
 
-      {
-        # Used by `nix develop .#<name>`
-        devShells = forAllSystems (
-          system: import ./shell.nix pkgs.${system}
-        );
-
-        # Set formatter used by `nix fmt`
-        formatter = forAllSystems (
-          system: pkgs.${system}.nixfmt
-        );
-      }
-    ];
+    # Set formatter used by `nix fmt`
+    formatter = forAllSystems (
+      system: pkgs.${system}.nixfmt
+    );
+  };
 
   inputs = {
     # Default to use unstable packages (current stable version 26.05)

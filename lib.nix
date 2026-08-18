@@ -1,17 +1,35 @@
-lib:
-with lib; {
-  fromRoot = p: path.append ../. p;
+lib: {
+  fromRoot = path: lib.path.append ../. path;
 
-  mkNixOs = nixpkgs: {
-    hostname ? "nixos",
-    system ? "x86_64-linux",
-    modules ? {},
-    specialArgs ? [],
-  }:
-    if !(nixpkgs ? lib) || !(nixpkgs.lib ? nixosSystem)
-    then throw "mkNixOs: expected the nixpkgs flake input, got a ${builtins.typeOf nixpkgs} without `.lib.nixosSystem`"
-    else
-      nixpkgs.lib.nixosSystem {
-        inherit system specialArgs;
-      };
+  scanPath = {
+    entries = path: builtins.attrNames (builtins.readDir path);
+
+    dirs = path:
+      builtins.attrNames (
+        lib.filterAttrs (_: type: type == "directory") (builtins.readDir path)
+      );
+
+    nixFiles = path:
+      builtins.attrNames (
+        lib.filterAttrs (
+          name: type:
+            (type == "regular")
+            && (name != "default.nix")
+            && (lib.hasSuffix ".nix" name)
+        ) (builtins.readDir path)
+      );
+
+    exclude = entries: excludeList:
+      builtins.filter (name: !(builtins.elem name excludeList)) entries;
+
+    toPaths = path: entries: map (name: path + "/${name}") entries;
+  };
+
+  genConfigs = {
+    nixos = {};
+
+    darwin = {};
+
+    home-manger = {};
+  };
 }

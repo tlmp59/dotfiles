@@ -7,17 +7,21 @@
   inherit (nixpkgs) lib;
 
   mkNixOs = {
+    hostname ? "nixos",
     system ? "x86_64-linux",
     modules ? {},
-  }:
-    nixpkgs.lib.nixosSystem {
+  }: {
+    ${hostname} = nixpkgs.lib.nixosSystem {
       inherit system;
     };
+  };
+
+  mkDarwin = {};
 in
   with lib; {
-    nixosConfigurations = {
-      wsl = mkNixOs;
-    };
+    nixosConfigurations = mergeAttrsList [
+      (mkNixOs {hostname = "wsl";})
+    ];
 
     homeConfigurations = {};
   }
