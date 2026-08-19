@@ -3,25 +3,12 @@
   ulib,
   ...
 }: let
-  inherit (inputs) nixpkgs home-manager;
+  inherit (inputs) nixpkgs;
   inherit (nixpkgs) lib;
-
-  mkNixOs = {
-    hostname ? "nixos",
-    system ? "x86_64-linux",
-    modules ? {},
-  }: {
-    ${hostname} = nixpkgs.lib.nixosSystem {
-      inherit system;
-    };
-  };
-
-  mkDarwin = {};
-in
-  with lib; {
-    nixosConfigurations = mergeAttrsList [
-      (mkNixOs {hostname = "wsl";})
+in {
+  nixosConfigurations =
+    ulib.mergeAttrsNoOverride [
     ];
 
-    homeConfigurations = {};
-  }
+  darwinConfigurations = {};
+}

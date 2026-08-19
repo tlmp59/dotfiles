@@ -1,30 +1,38 @@
 {
   description = "A modular NixOs system built for the road";
 
-  outputs = {nixpkgs, ...} @ inputs: let
+  outputs = {
+    self,
+    nixpkgs,
+    ...
+  } @ inputs: let
     inherit (nixpkgs) lib;
-    ulib = import ./lib.nix lib;
     pkgs = nixpkgs.legacyPackages;
+    ulib = import ./lib.nix lib;
+  in
+    # Merge attrs list with no-override
+    ulib.mergeAttrsNoOverride [
+      (import ./host {inherit inputs ulib self;})
 
-    forAllSystems = lib.genAttrs [
-      /*
-      Self-maintained system architectures, for a full list of current
-      supported architectures consider using `lib.systems.flakeExposed`
-      (experimental)
-      */
-      "x86_64-linux"
+      {
+        # Reusable modules access through self.nixosModules.<name>
+        nixosModules = {
+          default = ./module;
+          nixos = ./module/nixos;
+          # darwin = ./module/darwin;
+        };
+
+        # Used by `nix develop .#<name>`
+        devShells = ulib.forAllSystems (
+          system: import ./shell.nix pkgs.${system}
+        );
+
+        # Set formatter used by `nix fmt`
+        formatter = ulib.forAllSystems (
+          system: pkgs.${system}.nixfmt
+        );
+      }
     ];
-  in {
-    # Used by `nix develop .#<name>`
-    devShells = forAllSystems (
-      system: import ./shell.nix pkgs.${system}
-    );
-
-    # Set formatter used by `nix fmt`
-    formatter = forAllSystems (
-      system: pkgs.${system}.nixfmt
-    );
-  };
 
   inputs = {
     # Default to use unstable packages (current stable version 26.05)
