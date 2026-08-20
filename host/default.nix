@@ -1,11 +1,12 @@
 {
-  inputs,
-  ulib,
+  self,
+  nixpkgs,
+  home-manager,
   ...
-} @ args: let
-  # 'self' arg is auto injected by nix as a reference to 'outputs' attrset
-  inherit (inputs) self nixpkgs home-manager;
+} @ inputs: let
   inherit (nixpkgs) lib;
+  ulib = self._internal.lib;
+  myModules = import self._internal.paths.moduleRoot;
 
   mkHosts = {
     builder,
@@ -15,13 +16,13 @@
     ulib.mergeAttrsNoOverride (
       map (
         system:
-          lib.genAttrs (ulib.scanPath.dirs ./host/${system}) (
+          lib.genAttrs (ulib.scanPath.dirs ./${system}) (
             hostname:
               builder {
                 inherit system;
-                specialArgs = args // {inherit hostname;};
+                specialArgs = {inherit inputs hostname;};
                 modules = lib.flatten [
-                  self.nixosModules.default
+                  myModules.base
                   extraModules
                 ];
               }
@@ -35,12 +36,7 @@ in {
     entries = ulib.hostSystems.nixos;
     extraModules = [
       home-manager.nixosModules.home-manager
-      self.nixosModules.nixos
+      myModules.nixos
     ];
   };
-
-  # darwinConfigurations = mkHosts {
-  #   builder = nix-darwin.lib.darwinSystem;
-  #   entries = ulib.hostSystems.darwin;
-  # };
 }
