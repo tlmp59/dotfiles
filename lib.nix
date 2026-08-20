@@ -40,16 +40,17 @@ lib: rec {
         lib.mapAttrsToList (name: v: map (s: "${name}/${s}") v.wrong) partitioned
       );
     in
+      # return { nixos=[...]; darwin=[...]; invalid=[...]; }
       valid // {inherit invalid;};
 
     scanned = validateAttrs {
       nixos = {
-        entries = scanPath.dirs ./host/nixos;
+        entries = scanPath.dirs ./host/nixos; # hardcode path
         cond = s: builtins.elem s lib.systems.doubles.linux;
       };
 
       darwin = {
-        entries = scanPath.dirs ./host/darwin;
+        entries = scanPath.dirs ./host/darwin; # hardcode path
         cond = s: builtins.elem s lib.systems.doubles.darwin;
       };
     };
@@ -58,15 +59,9 @@ lib: rec {
     "hostSystems: skipping invalid system dir(s): ${builtins.concatStringsSep ", " scanned.invalid}"
     (scanned // {all = scanned.nixos ++ scanned.darwin;});
 
-  mkConfigs = {
-    nixos = {}: {};
-
-    darwin = {}: {};
-  };
-
   fromRoot = path: lib.path.append ../. path;
 
   forAllSystems = func: lib.genAttrs hostSystems.all func;
 
-  mergeAttrsNoOverride = attrs: builtins.foldl' lib.unionOfDisjoint {} attrs;
+  mergeAttrsNoOverride = attrs: builtins.foldl' lib.attrsets.unionOfDisjoint {} attrs;
 }

@@ -1,38 +1,33 @@
 {
   description = "A modular NixOs system built for the road";
 
-  outputs = {
-    self,
-    nixpkgs,
-    ...
-  } @ inputs: let
-    inherit (nixpkgs) lib;
+  outputs = {nixpkgs, ...} @ inputs: let
     pkgs = nixpkgs.legacyPackages;
-    ulib = import ./lib.nix lib;
+    ulib = import ./lib.nix nixpkgs.lib;
   in
-    # Merge attrs list with no-override
-    ulib.mergeAttrsNoOverride [
-      (import ./host {inherit inputs ulib self;})
+    {
+      # Reusable modules access through self.nixosModules.<name>
+      nixosModules = {
+        default = ./module;
+        nixos = ./module/nixos;
+        darwin = ./module/darwin;
+      };
 
-      {
-        # Reusable modules access through self.nixosModules.<name>
-        nixosModules = {
-          default = ./module;
-          nixos = ./module/nixos;
-          # darwin = ./module/darwin;
-        };
+      # Used by `nix develop .#<name>`
+      devShells = ulib.forAllSystems (
+        system: import ./shell.nix pkgs.${system}
+      );
 
-        # Used by `nix develop .#<name>`
-        devShells = ulib.forAllSystems (
-          system: import ./shell.nix pkgs.${system}
-        );
-
-        # Set formatter used by `nix fmt`
-        formatter = ulib.forAllSystems (
-          system: pkgs.${system}.nixfmt
-        );
-      }
-    ];
+      # Set formatter used by `nix fmt`
+      formatter = ulib.forAllSystems (
+        system: pkgs.${system}.nixfmt
+      );
+    }
+    /*
+    No need for merge-no-override here, as long as ./host/default.nix only
+    return os-specific configs
+    */
+    // (import ./host {inherit inputs ulib;});
 
   inputs = {
     # Default to use unstable packages (current stable version 26.05)
