@@ -1,30 +1,25 @@
 {
-  self,
-  nixpkgs,
-  home-manager,
+  inputs,
+  hostSystems,
   ...
-} @ inputs: let
+}: let
+  inherit (inputs) self nixpkgs;
   inherit (nixpkgs) lib;
-  ulib = self._internal.lib;
-  myModules = import self._internal.paths.moduleRoot;
+  inherit (self) _lib _paths;
 
   mkHosts = {
     builder,
     entries,
-    extraModules ? [],
+    modules ? [],
   }:
-    ulib.mergeAttrsNoOverride (
+    _lib.mergeAttrsNoOverride (
       map (
         system:
-          lib.genAttrs (ulib.scanPath.dirs ./${system}) (
+          lib.genAttrs (_lib.scanPath.dirs (_paths.toHost + "/${system}")) (
             hostname:
               builder {
-                inherit system;
+                inherit system modules;
                 specialArgs = {inherit inputs hostname;};
-                modules = lib.flatten [
-                  myModules.base
-                  extraModules
-                ];
               }
           )
       )
@@ -33,10 +28,9 @@
 in {
   nixosConfigurations = mkHosts {
     builder = lib.nixosSystem;
-    entries = ulib.hostSystems.nixos;
-    extraModules = [
-      home-manager.nixosModules.home-manager
-      myModules.nixos
+    entries = hostSystems.linux;
+    modules = [
+      self.nixosModules.default
     ];
   };
 }

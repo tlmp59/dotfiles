@@ -1,4 +1,4 @@
-lib: rec {
+lib: {
   scanPath = let
     tryReadDir = path:
       if (builtins.pathExists path)
@@ -25,43 +25,28 @@ lib: rec {
     toPaths = path: entries: map (name: path + "/${name}") entries;
   };
 
-  hostSystems = let
-    validateAttrs = attrs: let
-      partitioned = builtins.mapAttrs (_: {
-        entries,
-        cond,
-      }:
-        builtins.partition cond entries)
-      attrs;
-
-      valid = lib.mapAttrs (_: v: v.right) partitioned;
-
-      invalid = lib.concatLists (
-        lib.mapAttrsToList (name: v: map (s: "${name}/${s}") v.wrong) partitioned
-      );
-    in
-      # return { nixos=[...]; darwin=[...]; invalid=[...]; }
-      valid // {inherit invalid;};
-
-    scanned = validateAttrs {
-      nixos = {
-        entries = scanPath.dirs ./host/nixos; # hardcode path
-        cond = s: builtins.elem s lib.systems.doubles.linux;
-      };
-
-      darwin = {
-        entries = scanPath.dirs ./host/darwin; # hardcode path
-        cond = s: builtins.elem s lib.systems.doubles.darwin;
-      };
+  classifyHostSystems = entries: let
+    platforms = {
+      inherit (lib.systems.doubles) linux darwin;
     };
+
+    systems =
+      builtins.mapAttrs (
+        _: supported:
+          builtins.filter
+          (s: builtins.elem s supported)
+          entries
+      )
+      platforms;
+
+    valid = lib.flatten (lib.attrValues systems);
+    invalid = lib.subtractLists entries valid;
   in
-    lib.warnIf (scanned.invalid != [])
-    "hostSystems: skipping invalid system dir(s): ${builtins.concatStringsSep ", " scanned.invalid}"
-    (scanned // {all = scanned.nixos ++ scanned.darwin;});
+    lib.warnIf (invalid != [])
+    "hostSystems: skipping invalid system dir(s): ${builtins.concatStringsSep ", " invalid}"
+    systems;
 
   fromRoot = path: lib.path.append ../. path;
-
-  forAllSystems = func: lib.genAttrs hostSystems.all func;
 
   mergeAttrsNoOverride = attrs: builtins.foldl' lib.attrsets.unionOfDisjoint {} attrs;
 }

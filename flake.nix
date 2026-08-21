@@ -5,26 +5,64 @@
     inherit (nixpkgs) lib;
     pkgs = nixpkgs.legacyPackages;
 
-    _internal = {
-      lib = import ./lib.nix lib;
-      paths = {
-        hostRoot = ./host;
-        moduleRoot = ./module;
-        shells = ./shell.nix;
-      };
+    _paths = {
+      toHost = ./host;
+      toModule = ./module;
+      toLib = ./lib.nix;
+      toShells = ./shell.nix;
     };
+
+    _lib = import _paths.toLib lib;
+
+    _modules = import _paths.toModule;
+
+    # Return attrset contains all valid supported systems
+    hostSystems = let
+      classify = entries: let
+        doublesByOs = {
+          inherit (lib.systems.doubles) linux darwin;
+        };
+
+        matched =
+          builtins.mapAttrs (
+            _: doubles:
+              builtins.filter
+              (s: builtins.elem s doubles)
+              entries
+          )
+          doublesByOs;
+
+        _all = lib.flatten (lib.attrValues matched);
+        invalid = lib.subtractLists entries _all;
+      in
+        lib.warnIf (invalid != [])
+        "Skipping invalid system dir(s): ${builtins.concatStringsSep ", " invalid}"
+        (matched // {inherit _all;});
+    in
+      classify (_lib.scanPath.dirs _paths.toHost);
+
+    forAllSystems = func: lib.genAttrs hostSystems._all func;
   in
     {
-      # Exposed as attr within `self`
-      inherit _internal;
+      # Exposed as attrs to access with `self.<attr>`
+      inherit _paths _lib;
+
+      # Preset configs for outside flake use
+      nixosModules = {
+        default = _modules.nixos;
+      };
+
+      darwinModules = {
+        default = _modules.darwin;
+      };
 
       # Used by `nix develop .#<name>`
-      devShells = _internal.lib.forAllSystems (
-        system: import _internal.paths.shells pkgs.${system}
+      devShells = forAllSystems (
+        system: import _paths.toShells pkgs.${system}
       );
 
       # Set formatter used by `nix fmt`
-      formatter = _internal.lib.forAllSystems (
+      formatter = forAllSystems (
         system: pkgs.${system}.nixfmt
       );
     }
@@ -32,11 +70,13 @@
     No need for merge-no-override here, as long as ./host/default.nix only
     return os-specific configs
     */
-    // (import _internal.paths.hostRoot inputs);
+    // (import _paths.toHost {inherit inputs hostSystems;});
 
   inputs = {
     # Default to use unstable packages (current stable version 26.05)
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+
+    nixos-wsl.url = "github:nix-community/NixOS-WSL/main";
 
     home-manager = {
       url = "github:nix-community/home-manager/master";
@@ -47,8 +87,6 @@
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    nixos-wsl.url = "github:nix-community/NixOS-WSL/main";
 
     import-tree.url = "github:vic/import-tree";
   };
