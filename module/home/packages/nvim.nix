@@ -61,7 +61,7 @@ in {
       lua-language-server
       yaml-language-server
       vscode-css-languageserver
-      nixd
+      nil
       harper
       basedpyright
       tinymist
