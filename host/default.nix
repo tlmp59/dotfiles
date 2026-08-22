@@ -4,8 +4,8 @@
   ...
 }: let
   inherit (inputs) self nixpkgs;
-  inherit (nixpkgs) lib;
   inherit (self) _lib _paths;
+  inherit (nixpkgs) lib;
 
   mkHosts = {
     builder,
@@ -25,6 +25,8 @@
       )
       entries
     );
+
+  mkHome = {}: {};
 in {
   nixosConfigurations = mkHosts {
     builder = lib.nixosSystem;

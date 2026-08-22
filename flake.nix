@@ -32,16 +32,16 @@
           )
           doublesByOs;
 
-        _all = lib.flatten (lib.attrValues matched);
-        invalid = lib.subtractLists entries _all;
+        all = lib.flatten (lib.attrValues matched);
+        invalid = lib.subtractLists entries all;
       in
         lib.warnIf (invalid != [])
         "Skipping invalid system dir(s): ${builtins.concatStringsSep ", " invalid}"
-        (matched // {inherit _all;});
+        (matched // {inherit all;});
     in
       classify (_lib.scanPath.dirs _paths.toHost);
 
-    forAllSystems = func: lib.genAttrs hostSystems._all func;
+    forAllSystems = func: lib.genAttrs hostSystems.all func;
   in
     {
       # Exposed as attrs to access with `self.<attr>`
@@ -55,6 +55,8 @@
       darwinModules = {
         default = _modules.darwin;
       };
+
+      homeModules.default = _modules.home;
 
       # Used by `nix develop .#<name>`
       devShells = forAllSystems (

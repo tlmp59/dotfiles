@@ -25,35 +25,51 @@ Minimal example for a standalone flake using these defaults directly:
 */
 rec {
   base = {
+    config,
     inputs,
     lib,
     pkgs,
     hostname,
     ...
   }: {
-    networking.hostName = lib.mkDefault hostname;
-
-    nixpkgs.config.allowUnfree = lib.mkDefault true;
-
-    nix.settings = {
-      experimental-features = ["nix-command" "flakes"];
-      # trusted-users, substituters, etc.
+    options.M = {
+      enableHomeManager = lib.mkEnableOption "enable home-manager integration";
+      defaultUser = lib.mkOption {
+        type = lib.types.str;
+        default = "d3vnrd";
+      };
     };
 
-    environment.systemPackages = with pkgs; [
-      git
-      curl
+    config = lib.mkMerge [
+      (lib.mkIf config.M.enableHomeManager {
+        home-manager.users.${config.M.defaultUser}.imports = [home];
+        home-manager = {
+          useGlobalPkgs = lib.mkDefault true;
+          useUserPackages = lib.mkDefault true;
+          extraSpecialArgs = lib.mkForce {inherit inputs;};
+        };
+      })
+
+      {
+        networking.hostName = lib.mkDefault hostname;
+
+        nixpkgs.config.allowUnfree = lib.mkDefault true;
+
+        nix.settings = {
+          experimental-features = ["nix-command" "flakes"];
+          # trusted-users, substituters, etc.
+        };
+
+        environment.systemPackages = with pkgs; [
+          git
+          curl
+        ];
+      }
     ];
+  };
 
-    # home-manager.users."nixos".imports = lib.flatten [
-    #   inputs.home-configs.homeModules.default
-    # ];
-
-    home-manager = {
-      useGlobalPkgs = lib.mkDefault true;
-      useUserPackages = lib.mkDefault true;
-      extraSpecialArgs = lib.mkForce {inherit inputs;};
-    };
+  home = {inputs, ...}: {
+    imports = [(inputs.import-tree ./home)];
   };
 
   nixos = {
@@ -64,6 +80,7 @@ rec {
     imports = [
       base
       (inputs.import-tree ./nixos)
+      inputs.home-manager.nixosModules.home-manager
     ];
 
     boot.loader.systemd-boot.enable = lib.mkDefault true;
@@ -71,10 +88,11 @@ rec {
 
     services.openssh.enable = lib.mkDefault true;
 
-    # users.users.${config.myConfig.primaryUser} = {
-    #   isNormalUser = true;
-    #   extraGroups = ["wheel" "networkmanager"];
-    # };
+    home-manager = {
+      useGlobalPkgs = lib.mkDefault true;
+      useUserPackages = lib.mkDefault true;
+      extraSpecialArgs = lib.mkForce {inherit inputs;};
+    };
   };
 
   darwin = {
@@ -85,6 +103,7 @@ rec {
     imports = [
       base
       (inputs.import-tree ./darwin)
+      inputs.home-manager.darwinModules.home-manager
     ];
 
     homebrew.enable = lib.mkDefault true;
