@@ -7,14 +7,21 @@
 
     _paths = {
       toHost = ./host;
-      toModule = ./module;
+      toPresets = ./presets;
       toLib = ./lib.nix;
       toShells = ./shell.nix;
+      toConfigs = system: hostname: let
+        dir = ./host/${system}/${hostname};
+      in {
+        host = dir;
+        user = dir + "/home.nix";
+        hardware = dir + "/hardware-configuration.nix";
+      };
     };
 
     _lib = import _paths.toLib lib;
 
-    _modules = import _paths.toModule;
+    _presets = import _paths.toPresets; # collection of predefined configurations
 
     # Return attrset contains all valid supported systems
     hostSystems = let
@@ -49,14 +56,14 @@
 
       # Preset configs for outside flake use
       nixosModules = {
-        default = _modules.nixos;
+        default = _presets.nixos.default;
       };
 
       darwinModules = {
-        default = _modules.darwin;
+        default = _presets.darwin.default;
       };
 
-      homeModules.default = _modules.home;
+      homeModules.default = _presets.home;
 
       # Used by `nix develop .#<name>`
       devShells = forAllSystems (
@@ -84,12 +91,5 @@
       url = "github:nix-community/home-manager/master";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    disko = {
-      url = "github:nix-community/disko";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    import-tree.url = "github:vic/import-tree";
   };
 }

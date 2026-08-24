@@ -4,8 +4,13 @@ lib: {
       if (builtins.pathExists path)
       then builtins.readDir path
       else builtins.warn "scanPath: directory not found: ${builtins.toString path}" {};
-  in {
+  in rec {
     allEntries = path: builtins.attrNames (tryReadDir path);
+
+    excludeEntries = excludes: entries:
+      lib.filter
+      (name: !builtins.elem name excludes)
+      entries;
 
     dirs = path:
       builtins.attrNames (
@@ -23,6 +28,8 @@ lib: {
       );
 
     toPaths = path: entries: map (name: path + "/${name}") entries;
+
+    importModules = path: toPaths path (excludeEntries ["default.nix"] (allEntries path));
   };
 
   classifyHostSystems = entries: let
