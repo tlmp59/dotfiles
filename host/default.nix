@@ -1,34 +1,33 @@
 {
   inputs,
-  hostSystems,
+  supported,
   ...
 }: let
   inherit (inputs) self nixpkgs;
-  inherit (self) _lib _paths;
+  inherit (self) util;
   inherit (nixpkgs) lib;
 
   mkHosts = {
     builder,
     entries ? [],
-    defaultConfigs ? {...}: {},
+    modules ? {...}: {},
   }:
-    _lib.mergeAttrsNoOverride (
+    util.mergeAttrsNoOverride (
       map (
         system:
-          lib.genAttrs (_lib.scanPath.dirs (_paths.toHost + "/${system}")) (
+          lib.genAttrs (util.scanPath.dirs ./${system}) (
             hostname: let
-              hostPaths = _paths.toConfigs system hostname;
+              dir = ./${system}/${hostname};
+              configuration = dir + "/configuration.nix";
+              hardware = dir + "/hardware-configuration.nix";
             in
               builder {
                 inherit system;
-                specialArgs = {inherit inputs hostname;};
-                modules = lib.flatten [
-                  defaultConfigs
-
-                  #TODO: double check on this, currently a bit wierd on implementation
-                  (lib.optional (builtins.pathExists hostPaths.hardware) hostPaths.hardware)
-                  (lib.optional (builtins.pathExists hostPaths.host) hostPaths.host)
-                ];
+                specialArgs = {inherit inputs system hostname;};
+                modules =
+                  [modules]
+                  ++ lib.optional (builtins.pathExists hardware) hardware
+                  ++ lib.optional (builtins.pathExists configuration) configuration;
               }
           )
       )
@@ -37,7 +36,7 @@
 in {
   nixosConfigurations = mkHosts {
     builder = lib.nixosSystem;
-    entries = hostSystems.linux;
-    defaultConfigs = self.nixosModules.default;
+    entries = supported.linux;
+    modules = self.nixosModules.default;
   };
 }

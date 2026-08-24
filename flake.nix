@@ -4,27 +4,10 @@
   outputs = {nixpkgs, ...} @ inputs: let
     inherit (nixpkgs) lib;
     pkgs = nixpkgs.legacyPackages;
-
-    _paths = {
-      toHost = ./host;
-      toPresets = ./presets;
-      toLib = ./lib.nix;
-      toShells = ./shell.nix;
-      toConfigs = system: hostname: let
-        dir = ./host/${system}/${hostname};
-      in {
-        host = dir;
-        user = dir + "/home.nix";
-        hardware = dir + "/hardware-configuration.nix";
-      };
-    };
-
-    _lib = import _paths.toLib lib;
-
-    _presets = import _paths.toPresets; # collection of predefined configurations
+    util = import ./util.nix lib;
 
     # Return attrset contains all valid supported systems
-    hostSystems = let
+    supported = let
       classify = entries: let
         doublesByOs = {
           inherit (lib.systems.doubles) linux darwin;
@@ -46,40 +29,28 @@
         "Skipping invalid system dir(s): ${builtins.concatStringsSep ", " invalid}"
         (matched // {inherit all;});
     in
-      classify (_lib.scanPath.dirs _paths.toHost);
+      classify (util.scanPath.dirs ./host);
 
-    forAllSystems = func: lib.genAttrs hostSystems.all func;
+    forAllSystems = func: lib.genAttrs supported.all func;
   in
     {
-      # Exposed as attrs to access with `self.<attr>`
-      inherit _paths _lib;
+      inherit util;
 
-      # Preset configs for outside flake use
-      nixosModules = {
-        default = _presets.nixos.default;
-      };
+      nixosModules.default = import ./module/nixos;
 
-      darwinModules = {
-        default = _presets.darwin.default;
-      };
-
-      homeModules.default = _presets.home;
+      homeModules.default = import ./module/home;
 
       # Used by `nix develop .#<name>`
-      devShells = forAllSystems (
-        system: import _paths.toShells pkgs.${system}
-      );
+      devShells = forAllSystems (system: import ./shell.nix pkgs.${system});
 
       # Set formatter used by `nix fmt`
-      formatter = forAllSystems (
-        system: pkgs.${system}.nixfmt
-      );
+      formatter = forAllSystems (system: pkgs.${system}.nixfmt);
     }
     /*
     No need for merge-no-override here, as long as ./host/default.nix only
     return os-specific configs
     */
-    // (import _paths.toHost {inherit inputs hostSystems;});
+    // (import ./host {inherit inputs supported;});
 
   inputs = {
     # Default to use unstable packages (current stable version 26.05)

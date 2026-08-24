@@ -1,10 +1,10 @@
-lib: {
+lib: rec {
   scanPath = let
     tryReadDir = path:
       if (builtins.pathExists path)
       then builtins.readDir path
       else builtins.warn "scanPath: directory not found: ${builtins.toString path}" {};
-  in rec {
+  in {
     allEntries = path: builtins.attrNames (tryReadDir path);
 
     excludeEntries = excludes: entries:
@@ -28,9 +28,12 @@ lib: {
       );
 
     toPaths = path: entries: map (name: path + "/${name}") entries;
-
-    importModules = path: toPaths path (excludeEntries ["default.nix"] (allEntries path));
   };
+
+  importModules = path:
+    scanPath.toPaths path (
+      scanPath.excludeEntries ["default.nix"] (scanPath.allEntries path)
+    );
 
   classifyHostSystems = entries: let
     platforms = {

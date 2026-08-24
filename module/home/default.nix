@@ -1,3 +1,3 @@
 {inputs, ...}: {
-  imports = [inputs.self._lib.scanPath.importModules ./.];
+  imports = [inputs.self.util.importModules ./.];
 }

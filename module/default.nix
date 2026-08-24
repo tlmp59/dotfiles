@@ -3,11 +3,12 @@
   inputs,
   lib,
   pkgs,
+  system,
   hostname,
   ...
 }: {
   options.M = {
-    enableHomeManager = lib.mkEnableOption "enable home-manager integration";
+    home-manager.enable = lib.mkEnableOption "enable home-manager integration";
     defaultUser = lib.mkOption {
       type = lib.types.str;
       default = "d3vnrd";
@@ -15,12 +16,17 @@
   };
 
   config = lib.mkMerge [
-    (lib.mkIf config.M.enableHomeManager {
-      home-manager.users.${config.M.defaultUser}.imports = [];
+    (lib.mkIf config.M.home-manager.enable {
+      home-manager.users.${config.M.defaultUser}.imports = let
+        home = ../host/${system}/${hostname}/home.nix;
+      in
+        [./home]
+        ++ lib.optional (builtins.pathExists home) home;
+
       home-manager = {
         useGlobalPkgs = lib.mkDefault true;
         useUserPackages = lib.mkDefault true;
-        extraSpecialArgs = lib.mkForce {inherit inputs;};
+        extraSpecialArgs = {inherit inputs;};
       };
     })
 
