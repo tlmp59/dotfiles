@@ -29,16 +29,16 @@
         "Skipping invalid system dir(s): ${builtins.concatStringsSep ", " invalid}"
         (matched // {inherit all;});
     in
-      classify (util.scanPath.dirs ./host);
+      classify (util.scanPath.subDirs ./host);
 
     forAllSystems = func: lib.genAttrs supported.all func;
   in
     {
       inherit util;
 
-      nixosModules.default = import ./module/nixos;
+      nixosModules = util.mkModuleTree ./module/nixos;
 
-      homeModules.default = import ./module/home;
+      homeModules = util.mkModuleTree ./module/home;
 
       # Used by `nix develop .#<name>`
       devShells = forAllSystems (system: import ./shell.nix pkgs.${system});
@@ -48,7 +48,7 @@
     }
     /*
     No need for merge-no-override here, as long as ./host/default.nix only
-    return os-specific configs
+    return {nixosConfigurations = ...; darwinConfigurations = ...;}
     */
     // (import ./host {inherit inputs supported;});
 

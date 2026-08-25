@@ -8,7 +8,6 @@
   ...
 }: {
   options.M = {
-    home-manager.enable = lib.mkEnableOption "enable home-manager integration";
     defaultUser = lib.mkOption {
       type = lib.types.str;
       default = "d3vnrd";
@@ -16,7 +15,7 @@
   };
 
   config = lib.mkMerge [
-    (lib.mkIf config.M.home-manager.enable {
+    (lib.mkIf (inputs ? "home-manager") {
       home-manager.users.${config.M.defaultUser}.imports = let
         home = ../host/${system}/${hostname}/home.nix;
       in

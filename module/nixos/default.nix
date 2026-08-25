@@ -5,7 +5,6 @@
 }: {
   imports = lib.flatten [
     ../. # Global configs
-    (inputs.self.util.importModules ./.)
     (
       lib.optional (inputs ? home-manager)
       inputs.home-manager.nixosModules.home-manager

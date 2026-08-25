@@ -1,10 +1,10 @@
 lib: rec {
-  scanPath = let
+  scanPath = rec {
     tryReadDir = path:
       if (builtins.pathExists path)
       then builtins.readDir path
       else builtins.warn "scanPath: directory not found: ${builtins.toString path}" {};
-  in {
+
     allEntries = path: builtins.attrNames (tryReadDir path);
 
     excludeEntries = excludes: entries:
@@ -12,7 +12,9 @@ lib: rec {
       (name: !builtins.elem name excludes)
       entries;
 
-    dirs = path:
+    toPaths = path: entries: map (name: path + "/${name}") entries;
+
+    subDirs = path:
       builtins.attrNames (
         lib.filterAttrs (_: type: type == "directory") (tryReadDir path)
       );
@@ -26,37 +28,31 @@ lib: rec {
             && (lib.hasSuffix ".nix" name)
         ) (tryReadDir path)
       );
-
-    toPaths = path: entries: map (name: path + "/${name}") entries;
   };
 
-  importModules = path:
-    scanPath.toPaths path (
-      scanPath.excludeEntries ["default.nix"] (scanPath.allEntries path)
-    );
+  flakeRoot = builtins.toString ./.;
 
-  classifyHostSystems = entries: let
-    platforms = {
-      inherit (lib.systems.doubles) linux darwin;
-    };
-
-    systems =
-      builtins.mapAttrs (
-        _: supported:
-          builtins.filter
-          (s: builtins.elem s supported)
-          entries
+  mkModuleTree = with scanPath;
+    path: let
+      entries =
+        lib.filterAttrs (
+          name: type:
+            type
+            == "directory"
+            || (type == "regular" && lib.hasSuffix ".nix" name)
+        )
+        (tryReadDir path);
+    in
+      lib.mapAttrs' ( # Prime version allows changes to attr names
+        name: type: {
+          name = lib.removeSuffix ".nix" name;
+          value =
+            if type == "directory"
+            then moduleTree (path + "/${name}")
+            else path + "/${name}";
+        }
       )
-      platforms;
-
-    valid = lib.flatten (lib.attrValues systems);
-    invalid = lib.subtractLists entries valid;
-  in
-    lib.warnIf (invalid != [])
-    "hostSystems: skipping invalid system dir(s): ${builtins.concatStringsSep ", " invalid}"
-    systems;
-
-  fromRoot = path: lib.path.append ../. path;
+      entries;
 
   mergeAttrsNoOverride = attrs: builtins.foldl' lib.attrsets.unionOfDisjoint {} attrs;
 }

@@ -7,7 +7,7 @@
   imports = [inputs.nixos-wsl.nixosModules.wsl];
 
   wsl.enable = true;
-  wsl.defaultUser = "tlmp59";
+  wsl.defaultUser = config.M.defaultUser;
 
   # --Docker--
   wsl.docker-desktop.enable = false;
@@ -32,6 +32,5 @@
 
   fonts.packages = with pkgs; [
     nerd-fonts.jetbrains-mono
-    nerd-fonts.tinos
   ];
 }

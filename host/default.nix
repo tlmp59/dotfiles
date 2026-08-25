@@ -10,24 +10,25 @@
   mkHosts = {
     builder,
     entries ? [],
-    modules ? {...}: {},
+    defaultModule ? {...}: {},
   }:
     util.mergeAttrsNoOverride (
       map (
         system:
-          lib.genAttrs (util.scanPath.dirs ./${system}) (
+          lib.genAttrs (util.scanPath.subDirs ./${system}) (
             hostname: let
               dir = ./${system}/${hostname};
               configuration = dir + "/configuration.nix";
               hardware = dir + "/hardware-configuration.nix";
+              modules = lib.flatten [
+                defaultModule
+                (lib.optional (builtins.pathExists hardware) hardware)
+                (lib.optional (builtins.pathExists configuration) configuration)
+              ];
             in
               builder {
-                inherit system;
+                inherit system modules;
                 specialArgs = {inherit inputs system hostname;};
-                modules =
-                  [modules]
-                  ++ lib.optional (builtins.pathExists hardware) hardware
-                  ++ lib.optional (builtins.pathExists configuration) configuration;
               }
           )
       )
@@ -37,6 +38,6 @@ in {
   nixosConfigurations = mkHosts {
     builder = lib.nixosSystem;
     entries = supported.linux;
-    modules = self.nixosModules.default;
+    defaultModule = self.nixosModules.default;
   };
 }
