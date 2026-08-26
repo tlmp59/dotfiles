@@ -6,7 +6,9 @@
   system,
   hostname,
   ...
-}: {
+}: let
+  cfg = config.M;
+in {
   options.M = {
     defaultUser = lib.mkOption {
       type = lib.types.str;
@@ -16,11 +18,10 @@
 
   config = lib.mkMerge [
     (lib.mkIf (inputs ? "home-manager") {
-      home-manager.users.${config.M.defaultUser}.imports = let
+      home-manager.users.${cfg.defaultUser}.imports = let
         home = ../host/${system}/${hostname}/home.nix;
       in
-        [./home]
-        ++ lib.optional (builtins.pathExists home) home;
+        [./home] ++ lib.optional (builtins.pathExists home) home;
 
       home-manager = {
         useGlobalPkgs = lib.mkDefault true;
