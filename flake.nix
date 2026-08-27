@@ -34,11 +34,13 @@
     forAllSystems = func: lib.genAttrs supported.all func;
   in
     {
-      inherit util;
+      inherit util supported;
 
       nixosModules = util.mkModuleTree ./module/nixos;
 
-      homeModules = util.mkModuleTree ./module/home;
+      darwinModules = util.mkModuleTree ./module/darwin;
+
+      homeModules = util.mkModuleTree ./module/home; # `nix eval .#homeModules` to check
 
       # Used by `nix develop .#<name>`
       devShells = forAllSystems (system: import ./shell.nix pkgs.${system});
