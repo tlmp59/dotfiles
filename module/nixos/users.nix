@@ -20,9 +20,9 @@
         "docker"
       ];
 
-      openssh.authorizedKeys.keys = config.M.sshKeys; # make this a config option
+      # openssh.authorizedKeys.keys = config.M.sshKeys; # make this a config option
     };
 
-    users.mutableUsers = false;
+    users.mutableUsers = true;
   };
 }

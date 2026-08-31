@@ -46,7 +46,7 @@ lib: rec {
           name = lib.removeSuffix ".nix" name;
           value =
             if type == "directory"
-            then moduleTree (path + "/${name}")
+            then mkModuleTree (path + "/${name}")
             else path + "/${name}";
         }
       )
