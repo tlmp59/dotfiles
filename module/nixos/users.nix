@@ -10,17 +10,19 @@
     description = "SSH public keys authorized to access this machine.";
   };
 
-  users.users.${vars.username} = {
-    isNormalUser = true;
+  config = {
+    users.users.${vars.username} = {
+      isNormalUser = true;
 
-    extraGroups = [
-      "wheel"
-      "networkmanager"
-      "docker"
-    ];
+      extraGroups = [
+        "wheel"
+        "networkmanager"
+        "docker"
+      ];
 
-    openssh.authorizedKeys.keys = config.M.sshKeys; # make this a config option
+      openssh.authorizedKeys.keys = config.M.sshKeys; # make this a config option
+    };
+
+    users.mutableUsers = false;
   };
-
-  users.mutableUsers = false;
 }
