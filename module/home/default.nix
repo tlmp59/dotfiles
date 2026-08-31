@@ -2,24 +2,11 @@
   config,
   lib,
   pkgs,
+  vars,
   ...
 }: let
   cfg = config.M;
 in {
-  options.M.pkgs = {
-    enableDefault = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Enable default user packages.";
-    };
-
-    add = lib.mkOption {
-      type = with lib.types; listOf package;
-      default = [];
-      description = "Additional user packages.";
-    };
-  };
-
   options.M.dotfiles = {
     enable = lib.mkEnableOption "Enable support for user dotfiles.";
 
@@ -58,15 +45,8 @@ in {
     })
 
     {
-      home.packages = lib.flatten [
-        (lib.optionals config.M.pkgs.enableDefault (with pkgs; [
-          ripgrep
-          pandoc
-          fzf
-        ]))
-
-        config.M.pkgs.add
-      ];
+      home.username = vars.username;
+      home.stateVersion = "26.11";
     }
   ];
 }

@@ -1,13 +1,11 @@
-{config, ...}: let
-  cfg = config.M;
-in {
+{config, ...}: {
   programs.neovim.enable = true;
 
   home.file.".config/nvim" = {
     source =
       config.lib.file.mkOutOfStoreSymlink
-      "${cfg.dotfiles.path}/nvim";
+      "${config.M.dotfiles.path}/nvim";
 
-    enable = cfg.dotfiles.enable;
+    enable = config.M.dotfiles.enable;
   };
 }

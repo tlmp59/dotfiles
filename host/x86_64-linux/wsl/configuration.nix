@@ -1,16 +1,23 @@
 {
-  config,
   inputs,
   pkgs,
+  vars,
   ...
 }: {
-  imports = [inputs.nixos-wsl.nixosModules.wsl];
+  imports = [
+    inputs.nixos-wsl.nixosModules.wsl
+  ];
+
+  fonts.packages = with pkgs; [
+    nerd-fonts.jetbrains-mono
+  ];
 
   wsl.enable = true;
-  wsl.defaultUser = config.M.defaultUser;
+  wsl.defaultUser = vars.username;
 
   # --Docker--
   wsl.docker-desktop.enable = false;
+
   # Required packages for docker support
   wsl.extraBin = with pkgs; [
     {src = "${coreutils}/bin/cat";}
@@ -24,13 +31,4 @@
     enableOnBoot = true;
     autoPrune.enable = true;
   };
-
-  users.users.${config.M.defaultUser}.extraGroups = [
-    "wheel"
-    "docker"
-  ];
-
-  fonts.packages = with pkgs; [
-    nerd-fonts.jetbrains-mono
-  ];
 }

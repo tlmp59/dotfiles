@@ -1,13 +1,11 @@
-{config, ...}: let
-  cfg = config.M;
-in {
+{config, ...}: {
   programs.emacs.enable = true;
 
   home.file.".config/doom" = {
     source =
       config.lib.file.mkOutOfStoreSymlink
-      "${cfg.dotfiles.path}/doom";
+      "${config.M.dotfiles.path}/doom";
 
-    enable = cfg.dotfiles.enable;
+    enable = config.M.dotfiles.enable;
   };
 }

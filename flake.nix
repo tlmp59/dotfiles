@@ -34,13 +34,14 @@
     forAllSystems = func: lib.genAttrs supported.all func;
   in
     {
-      inherit util supported;
+      inherit util;
 
       nixosModules = util.mkModuleTree ./module/nixos;
 
       darwinModules = util.mkModuleTree ./module/darwin;
 
-      homeModules = util.mkModuleTree ./module/home; # `nix eval .#homeModules` to check
+      # `nix eval .#homeModules` to check
+      homeModules = util.mkModuleTree ./module/home;
 
       # Used by `nix develop .#<name>`
       devShells = forAllSystems (system: import ./shell.nix pkgs.${system});
@@ -62,6 +63,11 @@
 
     home-manager = {
       url = "github:nix-community/home-manager/master";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    secrets = {
+      url = "git+ssh://git@github.com/d3vnrd/nix-secrets.git?ref=main&shallow=1";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };

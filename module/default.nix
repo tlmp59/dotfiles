@@ -1,5 +1,4 @@
 {
-  config,
   inputs,
   lib,
   pkgs,
@@ -7,43 +6,48 @@
   hostname,
   ...
 }: let
-  cfg = config.M;
-in {
-  options.M = {
-    defaultUser = lib.mkOption {
-      type = lib.types.str;
-      default = "d3vnrd";
-    };
+  vars = import ../vars.nix {
+    inherit lib;
+    secrets = inputs.secrets or {};
   };
+in {
+  options.M = {};
 
   config = lib.mkMerge [
-    (lib.mkIf (inputs ? "home-manager") {
-      home-manager.users.${cfg.defaultUser}.imports = let
-        home = ../host/${system}/${hostname}/home.nix;
-      in
-        [./home] ++ lib.optional (builtins.pathExists home) home;
-
-      home-manager = {
-        useGlobalPkgs = lib.mkDefault true;
-        useUserPackages = lib.mkDefault true;
-        extraSpecialArgs = {inherit inputs;};
-      };
-    })
-
     {
-      networking.hostName = lib.mkDefault hostname;
+      # Adding finalized vars into module's args
+      _module.args.vars = vars;
 
-      nixpkgs.config.allowUnfree = lib.mkDefault true;
+      # Setting machine's hostname
+      networking.hostName = lib.mkForce hostname;
 
+      # Always enable flake's fetures
       nix.settings = {
         experimental-features = ["nix-command" "flakes"];
         # trusted-users, substituters, etc.
       };
 
+      nixpkgs.config.allowUnfree = lib.mkDefault true;
+
+      # Global system-wide packages
       environment.systemPackages = with pkgs; [
         git
         curl
       ];
     }
+
+    (lib.mkIf (inputs ? "home-manager") {
+      home-manager = {
+        useGlobalPkgs = lib.mkDefault true;
+        useUserPackages = lib.mkDefault true;
+        extraSpecialArgs = {inherit inputs vars;};
+      };
+
+      home-manager.users.${vars.username}.imports = let
+        home = ../host/${system}/${hostname}/home.nix;
+      in
+        [./home]
+        ++ lib.optional (builtins.pathExists home) home;
+    })
   ];
 }

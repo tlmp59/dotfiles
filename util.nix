@@ -30,8 +30,6 @@ lib: rec {
       );
   };
 
-  flakeRoot = builtins.toString ./.;
-
   mkModuleTree = with scanPath;
     path: let
       entries =
