@@ -1,10 +1,16 @@
 {
   description = "A modular NixOs system built for the road";
 
-  outputs = {nixpkgs, ...} @ inputs: let
+  outputs = {
+    self,
+    nixpkgs,
+    ...
+  } @ inputs: let
     inherit (nixpkgs) lib;
+
+    util = import ./lib lib;
+
     pkgs = nixpkgs.legacyPackages;
-    util = import ./util.nix lib;
 
     # Return attrset contains all valid supported systems
     supported = let
@@ -29,31 +35,31 @@
         "Skipping invalid system dir(s): ${builtins.concatStringsSep ", " invalid}"
         (matched // {inherit all;});
     in
-      classify (util.scanPath.subDirs ./host);
+      classify (util.scanPath.subDirs ./hosts);
 
-    forAllSystems = func: lib.genAttrs supported.all func;
+    forAllSystems = lib.genAttrs supported.all;
   in
     {
       inherit util;
 
-      nixosModules = util.mkModuleTree ./module/nixos;
+      nixosModules = util.mkModuleTree ./modules/nixos;
 
-      darwinModules = util.mkModuleTree ./module/darwin;
+      darwinModules = util.mkModuleTree ./modules/darwin;
 
       # `nix eval .#homeModules` to check
-      homeModules = util.mkModuleTree ./module/home;
+      homeModules = util.mkModuleTree ./modules/home;
 
       # Used by `nix develop .#<name>`
-      devShells = forAllSystems (system: import ./shell.nix pkgs.${system});
+      devShells = forAllSystems (system: import ./shells pkgs.${system});
 
       # Set formatter used by `nix fmt`
       formatter = forAllSystems (system: pkgs.${system}.nixfmt);
     }
     /*
-    No need for merge-no-override here, as long as ./host/default.nix only
+    No need for merge-no-override here, as long as ./hosts/default.nix only
     return {nixosConfigurations = ...; darwinConfigurations = ...;}
     */
-    // (import ./host {inherit inputs supported;});
+    // (import ./hosts {inherit inputs supported;});
 
   inputs = {
     # Default to use unstable packages (current stable version 26.05)

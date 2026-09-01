@@ -6,10 +6,7 @@
   hostname,
   ...
 }: let
-  vars = import ../vars.nix {
-    inherit lib;
-    secrets = inputs.secrets or {};
-  };
+  vars = inputs.self.util.mkVars (inputs.secrets or {});
 in {
   options.M = {};
 
@@ -44,7 +41,7 @@ in {
       };
 
       home-manager.users.${vars.username}.imports = let
-        home = ../host/${system}/${hostname}/home.nix;
+        home = ../hosts/${system}/${hostname}/home.nix;
       in
         [./home]
         ++ lib.optional (builtins.pathExists home) home;
