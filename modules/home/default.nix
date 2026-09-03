@@ -44,9 +44,9 @@ in {
       '';
     })
 
-    {
+    (lib.mkDefault {
       home.username = vars.username;
-      home.stateVersion = "26.11";
-    }
+      home.stateVersion = "25.11";
+    })
   ];
 }
