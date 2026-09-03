@@ -6,7 +6,12 @@
   hostdir,
   ...
 }: let
-  vars = inputs.self.util.mkVars (inputs.secrets or {});
+  /*
+   WARN:
+  'self' is always implicitly passed as an argument to 'outputs', therefore to
+  reference the main flake we need to use inputs.nix-config
+  */
+  vars = inputs.nix-config.util.mkVars (inputs.secrets or {});
 in {
   options.M = {};
 

@@ -6,7 +6,7 @@
   imports = lib.flatten [
     ../.
     (
-      lib.optional (inputs ? home-manager)
+      lib.optional (inputs ? "home-manager")
       inputs.home-manager.darwinModules.home-manager
     )
   ];

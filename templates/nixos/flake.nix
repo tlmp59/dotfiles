@@ -2,7 +2,7 @@
   description = "__DESCRIPTION__";
 
   outputs = {
-    main,
+    nix-config,
     nixpkgs,
     ...
   } @ inputs: let
@@ -11,23 +11,24 @@
     hostname = "__HOSTNAME__";
     system = "__SYSTEM__";
   in {
-    nixosConfigurations.${hostname} = main.util.mkHost {
+    nixosConfigurations.${hostname} = nix-config.util.mkHost {
       inherit hostname system inputs;
       build = lib.nixosSystem;
       hostdir = ./.;
-      defaultModule = main.nixosModules.default;
+      defaultModule = nix-config.nixosModules.default;
     };
 
-    checks.${system} = main.checks.${system};
+    checks.${system} = nix-config.checks.${system};
 
-    devShells.${system} = main.devShells.${system};
+    devShells.${system} = nix-config.devShells.${system};
 
-    formatter.${system} = main.formatter.${system};
+    formatter.${system} = nix-config.formatter.${system};
   };
 
   inputs = {
-    main.url = "github:d3vnrd/nix-config";
-    nixpkgs.follows = "main/nixpkgs";
-    home-manager.follows = "main/home-manager";
+    nix-config.url = "github:d3vnrd/nix-config";
+
+    nixpkgs.follows = "nix-config/nixpkgs";
+    home-manager.follows = "nix-config/home-manager";
   };
 }
