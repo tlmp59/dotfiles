@@ -28,5 +28,6 @@
   inputs = {
     main.url = "github:d3vnrd/nix-config";
     nixpkgs.follows = "main/nixpkgs";
+    home-manager.follows = "main/home-manager";
   };
 }
