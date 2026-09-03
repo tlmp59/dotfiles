@@ -1,12 +1,6 @@
 # TODO: separate these into files for documentations
 lib: rec {
-  mkVars = secrets: let
-    defaults = {
-      username = "nixos";
-      timeZone = "UTC";
-    };
-  in
-    lib.recursiveUpdate defaults (secrets.vars or {});
+  forAllSystems = lib.genAttrs lib.systems.flakeExposed;
 
   scanPath = rec {
     tryReadDir = path:
@@ -37,6 +31,14 @@ lib: rec {
       );
   };
 
+  mkVars = secrets: let
+    defaults = {
+      username = "nixos";
+      timeZone = "UTC";
+    };
+  in
+    lib.recursiveUpdate defaults (secrets.vars or {});
+
   mkModuleTree = path: let
     entries =
       lib.filterAttrs (
@@ -57,6 +59,31 @@ lib: rec {
       }
     )
     entries;
+
+  mkHost = {
+    build,
+    system,
+    hostname,
+    hostdir ? null,
+    inputs ? {},
+    defaultModule ? {...}: {},
+  }: let
+    modules = let
+      safeImport = file:
+        lib.optional (
+          hostdir != null && builtins.pathExists (hostdir + "/${file}")
+        ) (hostdir + "/${file}");
+    in
+      lib.flatten [
+        defaultModule
+        (safeImport "configuration.nix")
+        (safeImport "hardware-configuration.nix")
+      ];
+  in
+    build {
+      inherit system modules;
+      specialArgs = {inherit inputs system hostname hostdir;};
+    };
 
   mergeAttrsNoOverride = builtins.foldl' lib.attrsets.unionOfDisjoint {};
 }

@@ -2,8 +2,8 @@
   inputs,
   lib,
   pkgs,
-  system,
   hostname,
+  hostdir,
   ...
 }: let
   vars = inputs.self.util.mkVars (inputs.secrets or {});
@@ -40,11 +40,12 @@ in {
         extraSpecialArgs = {inherit inputs vars;};
       };
 
+      # TODO: update to support perhost configs
       home-manager.users.${vars.username}.imports = let
-        home = ../hosts/${system}/${hostname}/home.nix;
+        home = hostdir + "/home.nix";
       in
         [./home]
-        ++ lib.optional (builtins.pathExists home) home;
+        ++ lib.optional (hostdir != null && builtins.pathExists home) home;
     })
   ];
 }
