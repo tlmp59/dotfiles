@@ -11,6 +11,6 @@
       ./packages.nix
     ]
     ++ lib.optional
-    (inputs ? home-manager)
+    (inputs ? "home-manager")
     inputs.home-manager.nixosModules.home-manager;
 }

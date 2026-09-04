@@ -45,7 +45,6 @@ in {
         extraSpecialArgs = {inherit inputs vars;};
       };
 
-      # TODO: update to support perhost configs
       home-manager.users.${vars.username}.imports = let
         home = hostdir + "/home.nix";
       in
