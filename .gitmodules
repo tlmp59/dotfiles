@@ -1,0 +1,4 @@
+[submodule "hosts/wsl"]
+	path = hosts/wsl
+	url = git@github.com:d3vnrd/nix-hosts.git
+	branch = main
